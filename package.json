@@ -1,0 +1,25 @@
+{
+  "name": "vcaptcha",
+  "version": "1.0.0",
+  "description": "Node.js captcha generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "jasmine --config=jasmine.json",
+    "eslint": "./node_modules/.bin/eslint ."
+  },
+  "keywords": [
+    "node.js",
+    "captcha"
+  ],
+  "author": "Romain Mougel",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "redis": "^2.8.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.12.0",
+    "eslint-plugin-jasmine": "^2.10.1",
+    "jasmine": "^3.3.1"
+  }
+}
