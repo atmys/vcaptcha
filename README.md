@@ -56,7 +56,7 @@ vCaptcha.solve({
 
 Example with Angular template.
 
-````html
+```html
 <div class="captcha">
   <h5 *ngIf="error">Too many fails, come back later.</h5>
   <div *ngIf="!error" class="captcha-box">
