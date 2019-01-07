@@ -60,8 +60,7 @@ Example with Angular template.
 <div class="captcha">
   <h5 *ngIf="error">Too many fails, come back later.</h5>
   <div *ngIf="!error" class="captcha-box">
-    <label><span>{{ captcha.phrase }}</label>
-    <br>
+    <label><span>{{ captcha.phrase }}</span></label>
     <ul class="thumbnails selector">
       <li *ngFor="let src of captcha.data; let i = index">
         <div class="thumbnail" [class.selected]="isSelected(i)" (click)="toggleSelect(i)">
@@ -73,4 +72,6 @@ Example with Angular template.
 </div>
 ```
 
-![vCAPTCHA preview](preview.jpg)
+------------------
+
+![vCAPTCHA preview](https://github.com/atmys/vcaptcha/raw/master/preview.jpg)
