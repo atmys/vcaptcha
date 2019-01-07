@@ -1,5 +1,3 @@
-const bcrypt = require('bcrypt-nodejs');
-
 const pics = require('./pics');
 const phrases = require('./phrases');
 
@@ -35,7 +33,7 @@ module.exports = function (options = {}) {
             }
         }
 
-        const key = bcrypt.hashSync(JSON.stringify(answer), bcrypt.genSaltSync(8), null);
+        const key = JSON.stringify(answer);
         const phrase = phrases(language, names);
         const unique = randomString(10);
 
@@ -47,7 +45,7 @@ module.exports = function (options = {}) {
         solution = throwIfMissing('solution'),
     }) {
         const JSONSolution = isJSON(solution) ? solution : JSON.stringify(solution);
-        return bcrypt.compareSync(JSONSolution, key);
+        return JSONSolution === key;
     }
 
     function solve({
@@ -59,17 +57,18 @@ module.exports = function (options = {}) {
         const JSONSolution = isJSON(solution) ? solution : JSON.stringify(solution);
         client.get(`${captchaKey}${unique}`, function (err, key) {
             client.del(`${captchaKey}${unique}`);
-            const valid = bcrypt.compareSync(JSONSolution, key);
+            const valid = JSONSolution === key;
             if (!valid) {
-                client.setnx(`${failKey}${userId}`, 0, function (err) {
+                client.setnx(`${failKey}${userId}`, 0, function (err, alreadySet) {
                     if (err) {
                         throw new Error('Could not retrieve fail count');
                     }
-                    client.incr(`${failKey}${userId}`);
+                    if (alreadySet) client.incr(`${failKey}${userId}`);
                     client.expire(`${failKey}${userId}`, expire);
                     callback(valid);
                 });
             } else {
+                client.del(`${failKey}${userId}`);
                 callback(valid);
             }
         });

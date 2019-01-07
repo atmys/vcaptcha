@@ -14,7 +14,6 @@
   "author": "Romain Mougel",
   "license": "MIT",
   "dependencies": {
-    "bcrypt-nodejs": "0.0.3",
     "redis": "^2.8.0"
   },
   "devDependencies": {

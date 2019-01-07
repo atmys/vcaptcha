@@ -4,12 +4,18 @@ const vCaptcha = require('./index')({ client });
 const noClientVCaptcha = require('./index')();
 const phrases = require('./phrases');
 
+const userId = 'userId';
 const solvedCaptcha = {
-  userId: 'userId',
+  userId: userId,
   unique: 'unique',
-  key: '$2a$08$Q02EmeaGy2vKB5stDH5Ncu.Mi074TZlqc4QIWCryQAkY7KIZk5.Si',
+  key: JSON.stringify([1, 0]),
   solution: [1, 0]
 };
+
+beforeAll(done => {
+  client.del(`vcaptcha:user:${userId}`);
+  done();
+});
 
 describe('when creating unsecure', () => {
 
@@ -70,11 +76,11 @@ describe('when creating', () => {
     }).toThrow();
 
     expect(function () {
-      vCaptcha.create({ userId: 'id' });
+      vCaptcha.create({ userId: userId });
     }).toThrow();
 
     expect(function () {
-      noClientVCaptcha.create({ userId: 'id' }, function () { });
+      noClientVCaptcha.create({ userId: userId }, function () { });
     }).toThrow();
 
   });
@@ -82,7 +88,6 @@ describe('when creating', () => {
   it('should return key, data & names', done => {
     const expectedLength = 5;
     const expectedLanguage = 'fr';
-    const userId = 'userId';
     vCaptcha.create({
       userId: userId,
       language: expectedLanguage,
@@ -118,11 +123,11 @@ describe('when solving', () => {
     }).toThrow();
 
     expect(function () {
-      vCaptcha.solve({ userId: 'id' });
+      vCaptcha.solve({ userId: 'userId' });
     }).toThrow();
 
     expect(function () {
-      noClientVCaptcha.solve({ userId: 'id' }, function () { });
+      noClientVCaptcha.solve({ userId: 'userId' }, function () { });
     }).toThrow();
 
   });
