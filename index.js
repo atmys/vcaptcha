@@ -5,7 +5,7 @@ module.exports = function (options = {}) {
 
     const client = options.client;
     const fails = options.fails || 10;
-    const expire = options.expire || 60 * 60 * 6;
+    const failMemory = options.failMemory || 60 * 60 * 6;
     const failKey = 'vcaptcha:user:';
     const captchaKey = 'vcaptcha:unique:';
 
@@ -64,7 +64,7 @@ module.exports = function (options = {}) {
                         throw new Error('Could not retrieve fail count');
                     }
                     if (alreadySet) client.incr(`${failKey}${userId}`);
-                    client.expire(`${failKey}${userId}`, expire);
+                    client.expire(`${failKey}${userId}`, failMemory);
                     callback(valid);
                 });
             } else {
@@ -76,7 +76,7 @@ module.exports = function (options = {}) {
 
     function create({
         userId = throwIfMissing('userId'),
-        expire = 60 * 2,
+        expiresIn = 60 * 2,
         language,
         length
     }, callback = throwIfMissing('callback')) {
@@ -90,7 +90,7 @@ module.exports = function (options = {}) {
             if (count < fails) {
                 captcha = unsecureCreate({ language, length });
                 client.set(`${captchaKey}${captcha.unique}`, captcha.key);
-                client.expire(`${captchaKey}${captcha.unique}`, expire);
+                client.expire(`${captchaKey}${captcha.unique}`, expiresIn);
                 captcha.key = undefined;
             } else {
                 error = `Too many fails.`

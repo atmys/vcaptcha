@@ -1,6 +1,6 @@
 # vCAPTCHA
 
-Simple but user-friendy Node.js captcha generator. It makes the user pick up 2 pictures (order matters) among several (5 by default). Should be enough for low security forms.
+Simple but user-friendy Node.js captcha generator. It makes the user pick up 2 pictures (in sequence) among several (5 by default). Should be enough for low security forms.
 
 Pictures are taken from deprecated [VisualCaptcha](https://github.com/desirepath41/visualCaptcha).
 
@@ -26,7 +26,7 @@ npm i --save vcaptcha
 
 ### Usage
 
-```
+```js
 // INITIALIZE
 const redis = require('redis');
 const client = redis.createClient();
@@ -43,14 +43,34 @@ vCaptcha.create({
 // SOLVE CAPTCHA
 vCaptcha.solve({
   userId = '192.168.1.30',
-  unique = form.unique,
-  solution = form.solution
+  unique = body.unique,
+  solution = body.solution
 }, valid => {
   if (valid) {
     // user completed the captcha
   }
 });
-
-
 ```
 
+### Client use
+
+Example with Angular template.
+
+````html
+<div class="captcha">
+  <h5 *ngIf="error">Too many fails, come back later.</h5>
+  <div *ngIf="!error" class="captcha-box">
+    <label><span>{{ captcha.phrase }}</label>
+    <br>
+    <ul class="thumbnails selector">
+      <li *ngFor="let src of captcha.data; let i = index">
+        <div class="thumbnail" [class.selected]="isSelected(i)" (click)="toggleSelect(i)">
+          <img class="image" [src]="'data:image/png;base64,'+ src">
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+```
+
+![vCAPTCHA preview](preview.jpg)
