@@ -42,9 +42,9 @@ vCaptcha.create({
 
 // SOLVE CAPTCHA
 vCaptcha.solve({
-  userId = '192.168.1.30',
-  unique = body.unique,
-  solution = body.solution
+  userId: '192.168.1.30',
+  unique: body.unique,
+  solution: body.solution
 }, valid => {
   if (valid) {
     // user completed the captcha
