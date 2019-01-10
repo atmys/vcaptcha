@@ -2,7 +2,12 @@
 
 Simple but user-friendy Node.js captcha generator. It makes the user pick up 2 pictures (in sequence) among several (5 by default). Should be enough for low security forms.
 
-Pictures are taken from deprecated [VisualCaptcha](https://github.com/desirepath41/visualCaptcha).
+------------------
+
+![vCAPTCHA preview](https://github.com/atmys/vcaptcha/raw/master/preview.jpg)
+
+------------------
+
 
 ## Getting Started
 
@@ -72,6 +77,6 @@ Example with Angular template.
 </div>
 ```
 
-------------------
+### Credit
 
-![vCAPTCHA preview](https://github.com/atmys/vcaptcha/raw/master/preview.jpg)
+Pictures are taken from deprecated [VisualCaptcha](https://github.com/desirepath41/visualCaptcha).
