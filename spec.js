@@ -1,6 +1,6 @@
 const redis = require('redis');
 const client = redis.createClient();
-const vCaptcha = require('./index')({ client });
+const vCaptcha = require('./index')({ client, fails: 2 });
 const noClientVCaptcha = require('./index')();
 const phrases = require('./phrases');
 
@@ -21,11 +21,8 @@ describe('when creating unsecure', () => {
 
   it('should return key, data & names', () => {
     const expectedLength = 5;
-    const expectedLanguage = 'fr';
-    const captcha = noClientVCaptcha.unsecureCreate({
-      language: expectedLanguage,
-      length: expectedLength
-    });
+    const expectedLanguage = 'en';
+    const captcha = noClientVCaptcha.unsecureCreate();
 
     expect(captcha.key).toBeDefined();
     expect(captcha.data).toBeDefined();
@@ -87,7 +84,7 @@ describe('when creating', () => {
 
   it('should return key, data & names', done => {
     const expectedLength = 5;
-    const expectedLanguage = 'fr';
+    const expectedLanguage = 'en';
     vCaptcha.create({
       userId: userId,
       language: expectedLanguage,
@@ -106,6 +103,16 @@ describe('when creating', () => {
         expect(key).toBeTruthy();
         done();
       });
+    });
+  });
+
+  it('should fail if to many captcha fails', done => {
+    client.set(`vcaptcha:user:${userId}`, 2);
+    vCaptcha.create({
+      userId: userId,
+    }, err => {
+      expect(err).toBeTruthy();
+      done();
     });
   });
 
@@ -140,12 +147,48 @@ describe('when solving', () => {
     });
   });
 
+  it('should succeed if right JSON answer', done => {
+    client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
+    solvedCaptcha.solution = JSON.stringify([1, 0]);
+    vCaptcha.solve(solvedCaptcha, valid => {
+      expect(valid).toBe(true);
+      done();
+    });
+  });
+
   it('should fail if wrong answer', done => {
     client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
     solvedCaptcha.solution = [0, 1];
     vCaptcha.solve(solvedCaptcha, valid => {
       expect(valid).toBe(false);
       done();
+    });
+  });
+
+  // it('should fail if wrong answer', done => {
+  //   client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
+  //   solvedCaptcha.solution = JSON.stringify([0, 1]);
+  //   vCaptcha.solve(solvedCaptcha, valid => {
+  //     expect(valid).toBe(false);
+  //     done();
+  //   });
+  // });
+
+  describe('when solving unsecure', () => {
+    it('should fail if missing params', () => {
+
+      expect(function () {
+        vCaptcha.unsecureSolve();
+      }).toThrow();
+
+      expect(function () {
+        vCaptcha.unsecureSolve({});
+      }).toThrow();
+
+      expect(function () {
+        vCaptcha.unsecureSolve({ userId: 'key' });
+      }).toThrow();
+
     });
   });
 

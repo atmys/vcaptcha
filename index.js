@@ -12,7 +12,7 @@ module.exports = function (options = {}) {
     function unsecureCreate({
         language = 'en',
         length = 5
-    }) {
+    } = {}) {
         const answer = [],
             data = [],
             indexes = [],
@@ -56,9 +56,11 @@ module.exports = function (options = {}) {
         throwIfNoClient(client);
         const JSONSolution = isJSON(solution) ? solution : JSON.stringify(solution);
         client.get(`${captchaKey}${unique}`, function (err, key) {
+            /* istanbul ignore if */
             if (err) {
                 throw new Error('Could not retrieve captcha');
             }
+            /* istanbul ignore if */
             if (!key) {
                 throw new Error('Captcha does not exists');
             }
@@ -66,6 +68,7 @@ module.exports = function (options = {}) {
             const valid = JSONSolution === key;
             if (!valid) {
                 client.setnx(`${failKey}${userId}`, 0, function (err, alreadySet) {
+                    /* istanbul ignore if */
                     if (err) {
                         throw new Error('Could not retrieve fail count');
                     }
@@ -88,6 +91,7 @@ module.exports = function (options = {}) {
     }, callback = throwIfMissing('callback')) {
         throwIfNoClient(client);
         client.get(`${failKey}${userId}`, function (err, count) {
+            /* istanbul ignore if */
             if (err) {
                 throw new Error('Could not retrieve fail count');
             }

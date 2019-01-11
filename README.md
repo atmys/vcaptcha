@@ -1,4 +1,10 @@
-# vCAPTCHA
+# vCaptcha
+
+[![Build Status](https://travis-ci.org/atmys/vcaptcha.svg?branch=master)](https://travis-ci.org/atmys/vcaptcha)
+[![Coverage Status](https://coveralls.io/repos/github/atmys/vcaptcha/badge.svg?branch=master)](https://coveralls.io/github/atmys/vcaptcha?branch=master)
+[![Known Vulnerabilities](https://snyk.io/test/github/atmys/vcaptcha/badge.svg?targetFile=package.json)](https://snyk.io/test/github/atmys/vcaptcha?targetFile=package.json)
+[![codebeat badge](https://codebeat.co/badges/3713e4c8-40cc-4a25-a5ac-aac25f6b39a9)](https://codebeat.co/projects/github-com-atmys-vcaptcha-master)
+
 
 Simple but user-friendy Node.js captcha generator. It makes the user pick up 2 pictures (in sequence) among several (5 by default). Should be enough for low security forms.
 
