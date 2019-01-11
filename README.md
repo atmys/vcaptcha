@@ -29,18 +29,54 @@ What it does if you pass a Redis Client :
 npm i --save vcaptcha
 ```
 
-### Usage
+### API
+#### `require('vcaptcha')(options)`
+- Initialize vCaptcha
+- `options <Object>` 
+  - `client` **Required:** Redis client
+  - `fails` **Default:** 10 - max fails allowed per userId
+  - `failsMemory` **Default:** 60 * 60 * 6 - Period of time before fails count resets
+#### `create(options, callback)`
+- `options <Object>` 
+  - `userId` **Required:** unique client identifier
+  - `expiresIn` **Default:** 60 * 2
+  - `language` **Default:** 'en' - also supported: 'fr'
+  - `length` **Default:** 5 - number of pictures to send to the client
+- `callback <Function>` returns `(err, captcha, count)`
+  - `captcha <Object>`
+    - `unique` captcha ID
+    - `data` base64 pictures array
+    - `phrase` explanation to solve the captcha
+    - `names` pictures to find to solve the captcha, to create your own phrase
+  - `count` fail count
+#### `solve(options, callback)`
+- `options <Object>` 
+  - `userId` **Required:** unique client identifier
+  - `unique` **Required:** captcha ID to solve
+  - `solution` **Required:** guessed solution provided by the client.
+- `callback <Function>` returns `(valid)`
+  - `valid <Boolean>` whether or not captcha is solved
+
+### Example
+
+Try it on [RunKit](https://runkit.com/atmys/vcaptcha).
 
 ```js
 // INITIALIZE
 const redis = require('redis');
 const client = redis.createClient();
-const vCaptcha = require('vcaptcha')({ client });
+const vCaptcha = require('vcaptcha')({
+  client,
+  fails = 10,
+  failsMemory = 60 * 60 * 6
+});
 
 // CREATE A NEW CAPTCHA
 vCaptcha.create({
   userId: '192.168.1.30',
-  language: 'fr'
+  expiresIn: 60 * 2,
+  language: 'en',
+  length: 5
 }, (err, captcha, count) => {
   // captcha can be sent to your client form
 });

@@ -56,6 +56,12 @@ module.exports = function (options = {}) {
         throwIfNoClient(client);
         const JSONSolution = isJSON(solution) ? solution : JSON.stringify(solution);
         client.get(`${captchaKey}${unique}`, function (err, key) {
+            if (err) {
+                throw new Error('Could not retrieve captcha');
+            }
+            if (!key) {
+                throw new Error('Captcha does not exists');
+            }
             client.del(`${captchaKey}${unique}`);
             const valid = JSONSolution === key;
             if (!valid) {

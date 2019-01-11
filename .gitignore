@@ -46,3 +46,7 @@ dump.rdb
 
 # env
 /.env
+
+#nyc
+/.nyc_output
+
