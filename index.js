@@ -17,6 +17,7 @@ module.exports = function (options = {}) {
             data = [],
             indexes = [],
             names = [];
+        /* istanbul ignore next */
         while (data.length < length) {
             const x = Math.floor(Math.random() * pics.length);
             if (indexes.indexOf(x) === -1) {
@@ -24,6 +25,7 @@ module.exports = function (options = {}) {
                 data.push(pics[x].data);
             }
         }
+        /* istanbul ignore next */
         while (answer.length < 2) {
             const y = Math.floor(Math.random() * length);
             const z = indexes[y];
@@ -43,7 +45,7 @@ module.exports = function (options = {}) {
     function unsecureSolve({
         key = throwIfMissing('key'),
         solution = throwIfMissing('solution'),
-    }) {
+    } = {}) {
         const JSONSolution = isJSON(solution) ? solution : JSON.stringify(solution);
         return JSONSolution === key;
     }
@@ -54,7 +56,6 @@ module.exports = function (options = {}) {
         solution = throwIfMissing('solution'),
     }, callback = throwIfMissing('callback')) {
         throwIfNoClient(client);
-        const JSONSolution = isJSON(solution) ? solution : JSON.stringify(solution);
         client.get(`${captchaKey}${unique}`, function (err, key) {
             /* istanbul ignore if */
             if (err) {
@@ -65,19 +66,20 @@ module.exports = function (options = {}) {
                 throw new Error('Captcha does not exists');
             }
             client.del(`${captchaKey}${unique}`);
-            const valid = JSONSolution === key;
+            const valid = unsecureSolve({ solution, key });
+            const userFailKey = `${failKey}${userId}`;
             if (!valid) {
-                client.setnx(`${failKey}${userId}`, 0, function (err, alreadySet) {
+                client.setnx(userFailKey, 0, function (err) {
                     /* istanbul ignore if */
                     if (err) {
                         throw new Error('Could not retrieve fail count');
                     }
-                    if (alreadySet) client.incr(`${failKey}${userId}`);
-                    client.expire(`${failKey}${userId}`, failMemory);
+                    client.incr(userFailKey);
+                    client.expire(userFailKey, failMemory);
                     callback(valid);
                 });
             } else {
-                client.del(`${failKey}${userId}`);
+                client.del(userFailKey);
                 callback(valid);
             }
         });
@@ -90,11 +92,13 @@ module.exports = function (options = {}) {
         length
     }, callback = throwIfMissing('callback')) {
         throwIfNoClient(client);
-        client.get(`${failKey}${userId}`, function (err, count) {
+        client.get(`${failKey}${userId}`, function (err, stringCount) {
+
             /* istanbul ignore if */
             if (err) {
                 throw new Error('Could not retrieve fail count');
             }
+            const count = parseInt(stringCount || 0);
             let error = null;
             let captcha = {};
             if (count < fails) {

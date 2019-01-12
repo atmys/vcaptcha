@@ -1,6 +1,7 @@
 const redis = require('redis');
 const client = redis.createClient();
-const vCaptcha = require('./index')({ client, fails: 2 });
+const maxFails = 7;
+const vCaptcha = require('./index')({ client, fails: maxFails });
 const noClientVCaptcha = require('./index')();
 const phrases = require('./phrases');
 
@@ -91,7 +92,7 @@ describe('when creating', () => {
       length: expectedLength
     }, (err, captcha, count) => {
       expect(err).toBe(null);
-      expect(count).toBe(null);
+      expect(count).toBe(0);
       expect(captcha.key).toBeUndefined();
       expect(captcha.data).toBeDefined();
       expect(captcha.data.length).toBe(expectedLength);
@@ -107,7 +108,7 @@ describe('when creating', () => {
   });
 
   it('should fail if to many captcha fails', done => {
-    client.set(`vcaptcha:user:${userId}`, 2);
+    client.set(`vcaptcha:user:${userId}`, maxFails);
     vCaptcha.create({
       userId: userId,
     }, err => {
@@ -119,6 +120,7 @@ describe('when creating', () => {
 });
 
 describe('when solving', () => {
+
   it('should fail if missing params', () => {
 
     expect(function () {
@@ -131,6 +133,14 @@ describe('when solving', () => {
 
     expect(function () {
       vCaptcha.solve({ userId: 'userId' });
+    }).toThrow();
+
+    expect(function () {
+      vCaptcha.solve({ userId: 'userId', unique: 'unique' });
+    }).toThrow();
+
+    expect(function () {
+      vCaptcha.solve({ userId: 'userId', unique: 'unique', solution: 'solution' });
     }).toThrow();
 
     expect(function () {
@@ -147,6 +157,15 @@ describe('when solving', () => {
     });
   });
 
+  it('should fail if wrong JSON answer', done => {
+    client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
+    solvedCaptcha.solution = JSON.stringify([0, 1]);
+    vCaptcha.solve(solvedCaptcha, valid => {
+      expect(valid).toBe(false);
+      done();
+    });
+  });
+
   it('should succeed if right JSON answer', done => {
     client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
     solvedCaptcha.solution = JSON.stringify([1, 0]);
@@ -156,40 +175,56 @@ describe('when solving', () => {
     });
   });
 
-  it('should fail if wrong answer', done => {
-    client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
-    solvedCaptcha.solution = [0, 1];
-    vCaptcha.solve(solvedCaptcha, valid => {
-      expect(valid).toBe(false);
-      done();
+  it('should fail if wrong answer & incr fail count', done => {
+
+    // WE MAKE SURE THAT COUNT IS NULL BEFORE WE START
+    client.get(`vcaptcha:user:${userId}`, (err, count) => {
+      expect(count).toBe(null);
+      recurs(1);
     });
+
+    function recurs(n) {
+      // FORCE CAPTCHA CREATION
+      client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
+
+      // PROVIDE WRONG ANSWER
+      solvedCaptcha.solution = [0, 1];
+
+      // TRY TO SOLVE
+      vCaptcha.solve(solvedCaptcha, valid => {
+        expect(valid).toBe(false);
+
+        // COUNT FAILS
+        client.get(`vcaptcha:user:${userId}`, (err, count) => {
+          expect(parseInt(count)).toBe(n);
+
+          if (n < maxFails - 1) {
+            recurs(n + 1);
+          } else {
+            done();
+          }
+        });
+      });
+    }
   });
 
-  // it('should fail if wrong answer', done => {
-  //   client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
-  //   solvedCaptcha.solution = JSON.stringify([0, 1]);
-  //   vCaptcha.solve(solvedCaptcha, valid => {
-  //     expect(valid).toBe(false);
-  //     done();
-  //   });
-  // });
+});
 
-  describe('when solving unsecure', () => {
-    it('should fail if missing params', () => {
+describe('when solving unsecure', () => {
+  it('should fail if missing params', () => {
 
-      expect(function () {
-        vCaptcha.unsecureSolve();
-      }).toThrow();
+    expect(function () {
+      vCaptcha.unsecureSolve();
+    }).toThrow();
 
-      expect(function () {
-        vCaptcha.unsecureSolve({});
-      }).toThrow();
+    expect(function () {
+      vCaptcha.unsecureSolve({});
+    }).toThrow();
 
-      expect(function () {
-        vCaptcha.unsecureSolve({ userId: 'key' });
-      }).toThrow();
+    expect(function () {
+      vCaptcha.unsecureSolve({ key: 'key' });
+    }).toThrow();
 
-    });
+
   });
-
 });

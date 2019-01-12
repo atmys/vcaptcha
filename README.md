@@ -41,7 +41,7 @@ npm i --save vcaptcha
 - `options <Object>` 
   - `client` **Required:** Redis client
   - `fails` **Default:** 10 - max fails allowed per userId
-  - `failsMemory` **Default:** 60 * 60 * 6 - Period of time before fails count resets
+  - `failMemory` **Default:** 60 * 60 * 6 - Period of time before fails count resets
 #### `create(options, callback)`
 - `options <Object>` 
   - `userId` **Required:** unique client identifier
@@ -74,7 +74,7 @@ const client = redis.createClient();
 const vCaptcha = require('vcaptcha')({
   client,
   fails = 10,
-  failsMemory = 60 * 60 * 6
+  failMemory = 60 * 60 * 6
 });
 
 // CREATE A NEW CAPTCHA
