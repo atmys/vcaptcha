@@ -99,27 +99,34 @@ module.exports = function (options = {}) {
         expiresIn = 60 * 2,
         language,
         length
-    }, callback = throwIfMissing('callback')) {
+    }, callback) {
         throwIfNoClient(client);
-        client.get(`${failKey}${userId}`, function (err, stringCount) {
+        const promise = new Promise((resolve, reject) => {
+            client.get(`${failKey}${userId}`, function (err, stringCount) {
 
-            /* istanbul ignore if */
-            if (err) {
-                throw new Error('Could not retrieve fail count');
-            }
-            const count = parseInt(stringCount || 0);
-            let error = null;
-            let captcha = {};
-            if (count < fails) {
-                captcha = unsecureCreate({ language, length });
-                client.set(`${captchaKey}${captcha.unique}`, captcha.key);
-                client.expire(`${captchaKey}${captcha.unique}`, expiresIn);
-                captcha.key = undefined;
-            } else {
-                error = `Too many fails.`
-            }
-            callback(error, captcha, count);
+                /* istanbul ignore if */
+                if (err) {
+                    reject(new Error('Could not retrieve fail count'));
+                }
+                const count = parseInt(stringCount || 0);
+                let captcha = {};
+                if (count < fails) {
+                    captcha = unsecureCreate({ language, length });
+                    client.set(`${captchaKey}${captcha.unique}`, captcha.key);
+                    client.expire(`${captchaKey}${captcha.unique}`, expiresIn);
+                    captcha.key = undefined;
+                } else {
+                    reject(new Error(`Too many fails.`))
+                }
+                resolve({ captcha, count });
+            });
         });
+
+        if (callback && typeof callback === 'function') {
+            promise.then(({ captcha, count }) => callback(null, captcha, count)).catch(err => callback(err));
+        }
+
+        return promise;
     }
 
     return {

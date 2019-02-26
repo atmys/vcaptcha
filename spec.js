@@ -74,16 +74,12 @@ describe('when creating', () => {
     }).toThrow();
 
     expect(function () {
-      vCaptcha.create({ userId: userId });
-    }).toThrow();
-
-    expect(function () {
       noClientVCaptcha.create({ userId: userId }, function () { });
     }).toThrow();
 
   });
 
-  it('should return key, data & names', done => {
+  it('should return key, data & names (callback)', done => {
     const expectedLength = 5;
     const expectedLanguage = 'en';
     vCaptcha.create({
@@ -105,6 +101,15 @@ describe('when creating', () => {
         done();
       });
     });
+  });
+
+  it('should return key, data & names (promise)', async done => {
+    const { captcha, count } = await vCaptcha.create({
+      userId: userId
+    });
+    expect(count).toBe(0);
+    expect(captcha.data).toBeDefined();
+    done();
   });
 
   it('should fail if to many captcha fails', done => {
