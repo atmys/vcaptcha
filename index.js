@@ -54,35 +54,44 @@ module.exports = function (options = {}) {
         userId = throwIfMissing('userId'),
         unique = throwIfMissing('unique'),
         solution = throwIfMissing('solution'),
-    }, callback = throwIfMissing('callback')) {
-        throwIfNoClient(client);
-        client.get(`${captchaKey}${unique}`, function (err, key) {
-            /* istanbul ignore if */
-            if (err) {
-                throw new Error('Could not retrieve captcha');
-            }
-            /* istanbul ignore if */
-            if (!key) {
-                throw new Error('Captcha does not exists');
-            }
-            client.del(`${captchaKey}${unique}`);
-            const valid = unsecureSolve({ solution, key });
-            const userFailKey = `${failKey}${userId}`;
-            if (!valid) {
-                client.setnx(userFailKey, 0, function (err) {
-                    /* istanbul ignore if */
-                    if (err) {
-                        throw new Error('Could not retrieve fail count');
-                    }
-                    client.incr(userFailKey);
-                    client.expire(userFailKey, failMemory);
-                    callback(valid);
-                });
-            } else {
-                client.del(userFailKey);
-                callback(valid);
-            }
+    }, callback) {
+        const promise = new Promise((resolve, reject) => {
+            throwIfNoClient(client);
+            client.get(`${captchaKey}${unique}`, function (err, key) {
+                /* istanbul ignore if */
+                if (err) {
+                    reject(new Error('Could not retrieve captcha'));
+                }
+                /* istanbul ignore if */
+                if (!key) {
+                    reject(new Error('Captcha does not exists'));
+                }
+                client.del(`${captchaKey}${unique}`);
+                const valid = unsecureSolve({ solution, key });
+                const userFailKey = `${failKey}${userId}`;
+                if (!valid) {
+                    client.setnx(userFailKey, 0, function (err) {
+                        /* istanbul ignore if */
+                        if (err) {
+                            reject(new Error('Could not retrieve fail count'));
+                        }
+                        client.incr(userFailKey);
+                        client.expire(userFailKey, failMemory);
+                        resolve(valid);
+                    });
+                } else {
+                    client.del(userFailKey);
+                    resolve(valid);
+                }
+            });
+
         });
+
+        if (callback && typeof callback === 'function') {
+            promise.then(callback);
+        }
+
+        return promise;
     }
 
     function create({

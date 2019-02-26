@@ -139,9 +139,6 @@ describe('when solving', () => {
       vCaptcha.solve({ userId: 'userId', unique: 'unique' });
     }).toThrow();
 
-    expect(function () {
-      vCaptcha.solve({ userId: 'userId', unique: 'unique', solution: 'solution' });
-    }).toThrow();
 
     expect(function () {
       noClientVCaptcha.solve({ userId: 'userId' }, function () { });
@@ -149,12 +146,19 @@ describe('when solving', () => {
 
   });
 
-  it('should succeed if right answer', done => {
+  it('should succeed if right answer callback', done => {
     client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
     vCaptcha.solve(solvedCaptcha, valid => {
       expect(valid).toBe(true);
       done();
     });
+  });
+
+  it('should succeed if right answer promise', async done => {
+    client.set(`vcaptcha:unique:${solvedCaptcha.unique}`, solvedCaptcha.key);
+    const valid = await vCaptcha.solve(solvedCaptcha);
+    expect(valid).toBe(true);
+    done();
   });
 
   it('should fail if wrong JSON answer', done => {
